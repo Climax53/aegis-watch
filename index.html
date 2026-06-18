@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aegis Watch — U.S. Natural Hazards Monitor</title>
+<meta name="description" content="Live monitor for U.S. natural hazards. Data from NASA EONET, USGS earthquakes, and the National Weather Service." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --noaa-navy: #002b5c;
+    --noaa-blue: #003d6b;
+    --noaa-blue-2: #1c5586;
+    --noaa-cyan: #2c87b8;
+    --noaa-sky: #cfe4f3;
+    --bg: #eef2f5;
+    --card: #ffffff;
+    --card-soft: #f7f9fb;
+    --border: #d6dde3;
+    --border-strong: #a9b3bd;
+    --divider: #e5eaef;
+    --ink: #1a2733;
+    --ink-2: #45525e;
+    --ink-3: #6e7c87;
+    --ink-faint: #9aa5b1;
+    --on-dark: #ffffff;
+    --on-dark-dim: #b9cad7;
+    --hz-warning: #c8102e;
+    --hz-warning-bg: #fdecee;
+    --hz-watch: #d97706;
+    --hz-watch-bg: #fdf3e6;
+    --hz-advisory: #a16207;
+    --hz-advisory-bg: #fdf6e3;
+    --hz-minor: #5b6770;
+    --hz-minor-bg: #eef0f2;
+    --c-wildfires: #d84315;
+    --c-storms:    #c62828;
+    --c-volcanoes: #8d4925;
+    --c-ice:       #4a90b8;
+    --c-floods:    #2e7d32;
+    --c-drought:   #8e6c3a;
+    --c-quakes:    #6a4f9e;
+    --c-alerts:    #003d6b;
+    --shadow-sm: 0 1px 2px rgba(16,32,48,0.05);
+    --shadow-md: 0 1px 3px rgba(16,32,48,0.06), 0 4px 12px rgba(16,32,48,0.04);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: var(--noaa-cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .mono { font-family: 'Roboto Mono', monospace; }
+
+  .util-bar {
+    background: var(--noaa-navy); color: var(--on-dark);
+    font-size: 12px; padding: 6px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .util-bar a { color: var(--on-dark); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.4); }
+  .util-bar .crumb { color: var(--on-dark-dim); }
+  .gov-flag { display: inline-flex; align-items: center; gap: 6px; color: var(--on-dark-dim); }
+  .gov-flag::before {
+    content: ''; display: inline-block; width: 14px; height: 10px;
+    background: linear-gradient(to bottom, #b22234 0 22%, #fff 22% 44%, #b22234 44% 66%, #fff 66% 88%, #b22234 88% 100%);
+    border-radius: 1px; flex-shrink: 0;
+  }
+
+  header.brand { background: var(--card); border-bottom: 1px solid var(--border); }
+  .brand-row {
+    padding: 18px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .brand-mark { display: flex; align-items: center; gap: 14px; }
+  .brand-shield { width: 48px; height: 56px; flex-shrink: 0; }
+  .brand-text h1 {
+    margin: 0; font-size: 26px; font-weight: 700;
+    color: var(--noaa-navy); letter-spacing: -0.01em; line-height: 1.1;
+  }
+  .brand-text .subtitle { margin: 2px 0 0; font-size: 13px; color: var(--ink-3); font-weight: 400; }
+  .brand-actions { display: flex; align-items: center; gap: 10px; }
+  .live-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px; background: #e8f5e9; border: 1px solid #c8e6c9;
+    border-radius: 999px; font-size: 12px; font-weight: 500;
+    color: #1b5e20; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .pulse-dot {
+    position: relative; display: inline-block;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #2e7d32; color: #2e7d32;
+  }
+  .pulse-dot::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1.5px solid currentColor; opacity: .6;
+    animation: pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(.5); opacity: .8; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .accent-stripe {
+    height: 3px;
+    background: linear-gradient(90deg, var(--noaa-navy) 0 25%, var(--noaa-blue-2) 25% 50%, var(--noaa-cyan) 50% 75%, #f9a825 75% 100%);
+  }
+
+  .cat-strip { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 24px; }
+  .cat-strip-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-3); font-weight: 600; margin-bottom: 10px;
+  }
+  .cat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; }
+  .cat-tile {
+    background: var(--card); border: 1px solid var(--border);
+    border-top: 3px solid var(--cat-color, var(--ink-faint));
+    border-radius: 6px; padding: 10px 12px;
+    cursor: pointer; text-align: left; transition: all .15s;
+    font-family: inherit; position: relative;
+  }
+  .cat-tile:hover { border-color: var(--border-strong); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .cat-tile.off { opacity: 0.4; border-top-color: var(--ink-faint); background: var(--card-soft); }
+  .cat-tile-head { display: flex; align-items: center; justify-content: space-between; color: var(--cat-color); }
+  .cat-tile.off .cat-tile-head { color: var(--ink-faint); }
+  .cat-tile-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .cat-tile-num {
+    font-size: 26px; font-weight: 600; margin-top: 4px;
+    color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums;
+  }
+  .cat-tile.off .cat-tile-num { color: var(--ink-faint); }
+  .cat-tile-label { font-size: 11px; color: var(--ink-3); font-weight: 500; margin-top: 2px; }
+  .cat-tile-toggle { width: 8px; height: 8px; border-radius: 50%; background: var(--cat-color); }
+  .cat-tile.off .cat-tile-toggle { background: var(--ink-faint); }
+
+  .ticker {
+    background: var(--noaa-navy); color: var(--on-dark);
+    padding: 6px 0; overflow: hidden; border-bottom: 1px solid var(--border);
+  }
+  .ticker-inner { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--on-dark-dim); white-space: nowrap; }
+  .ticker-track { display: inline-block; padding-left: 100%; animation: ticker 90s linear infinite; }
+  .ticker-track:hover { animation-play-state: paused; }
+  @keyframes ticker { 100% { transform: translateX(-100%); } }
+  .ticker .lbl { color: #f9a825; font-weight: 500; margin-right: 6px; }
+  .ticker .sep { color: rgba(255,255,255,0.3); margin: 0 16px; }
+
+  .controls {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 24px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  }
+  .ctrl-group { display: flex; align-items: center; gap: 8px; }
+  .ctrl-label { font-size: 12px; color: var(--ink-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type="text"], select {
+    background: var(--card); border: 1px solid var(--border); color: var(--ink);
+    padding: 7px 12px; font-family: inherit; font-size: 14px;
+    border-radius: 4px; outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  input[type="text"]:focus, select:focus {
+    border-color: var(--noaa-cyan); box-shadow: 0 0 0 3px rgba(44,135,184,0.15);
+  }
+  input[type="text"] { min-width: 240px; }
+  .btn {
+    background: var(--card); color: var(--ink-2); border: 1px solid var(--border);
+    padding: 7px 12px; font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; border-radius: 4px; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: var(--card-soft); border-color: var(--border-strong); color: var(--ink); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.primary { background: var(--noaa-blue); color: var(--on-dark); border-color: var(--noaa-blue); }
+  .btn.primary:hover { background: var(--noaa-navy); border-color: var(--noaa-navy); color: var(--on-dark); }
+  .btn.danger:hover { color: var(--hz-warning); border-color: var(--hz-warning); background: var(--hz-warning-bg); }
+  .btn-icon { width: 14px; height: 14px; flex-shrink: 0; }
+  .seg {
+    display: inline-flex; background: var(--card-soft); border: 1px solid var(--border);
+    border-radius: 4px; padding: 2px; margin-left: auto;
+  }
+  .seg .btn {
+    background: transparent; border: none; color: var(--ink-3);
+    padding: 5px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .seg .btn.active { background: var(--card); color: var(--noaa-blue); box-shadow: var(--shadow-sm); }
+
+  main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; padding: 16px 24px 24px; }
+  main.view-list, main.view-map { grid-template-columns: 1fr; }
+  .panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-sm); overflow: hidden;
+  }
+  .panel-head {
+    padding: 12px 16px; border-bottom: 1px solid var(--divider);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card-soft);
+  }
+  .panel-title {
+    font-size: 13px; font-weight: 600; color: var(--noaa-navy);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title svg { color: var(--noaa-blue); width: 14px; height: 14px; }
+  .panel-meta { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--ink-3); }
+
+  .map-wrap {
+    position: relative;
+    background: linear-gradient(180deg, #f3f7fa 0%, #e9eff4 100%);
+    aspect-ratio: 1000 / 600; overflow: hidden;
+  }
+  .map-wrap svg { width: 100%; height: 100%; display: block; }
+  .map-wrap .state {
+    fill: #ffffff; stroke: #b8c5d1; stroke-width: 0.6;
+    stroke-linejoin: round; transition: fill .15s;
+  }
+  .map-wrap .state:hover { fill: #f0f5fa; }
+  .map-wrap .state-border { fill: none; stroke: #6e7c87; stroke-width: 0.8; stroke-linejoin: round; pointer-events: none; }
+  .map-wrap .nation { fill: none; stroke: var(--noaa-navy); stroke-width: 1.4; stroke-linejoin: round; pointer-events: none; }
+  .marker { cursor: pointer; }
+  .marker .halo { transition: opacity .2s; }
+  .marker:hover .halo { opacity: 0.5; }
+  .map-loading {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px; color: var(--ink-3); font-size: 13px;
+    background: rgba(255,255,255,0.85);
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border); border-top-color: var(--noaa-blue);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { animation: spin 1s linear infinite; }
+  .map-legend {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(255,255,255,0.95); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px;
+    box-shadow: var(--shadow-sm); font-size: 12px;
+  }
+  .map-legend-title {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .map-legend-row { display: flex; align-items: center; gap: 8px; color: var(--ink-2); margin-top: 3px; }
+  .legend-dot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
+  .map-attribution {
+    position: absolute; bottom: 6px; right: 10px;
+    font-family: 'Roboto Mono', monospace; font-size: 10px; color: var(--ink-faint);
+  }
+
+  .list-wrap { display: flex; flex-direction: column; max-height: 78vh; }
+  .list-scroll { overflow: auto; flex: 1; }
+  .event-row {
+    border-bottom: 1px solid var(--divider); padding: 14px 16px;
+    cursor: pointer; transition: background .12s;
+    display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: start;
+  }
+  .event-row:hover { background: var(--card-soft); }
+  .event-row.selected { background: #f0f7fc; border-left: 3px solid var(--noaa-blue); padding-left: 13px; }
+  .event-icon {
+    background: var(--cat-bg, #f0f3f5); color: var(--cat-color, var(--ink-2));
+    width: 36px; height: 36px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .event-icon svg { width: 18px; height: 18px; }
+  .event-title { font-size: 14px; font-weight: 500; line-height: 1.3; color: var(--ink); }
+  .event-desc {
+    font-size: 13px; color: var(--ink-2); margin-top: 4px; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .event-meta { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+  .event-time { font-family: 'Roboto Mono', monospace; font-size: 11px; color: var(--ink-3); }
+  .event-coord {
+    font-family: 'Roboto Mono', monospace; font-size: 10px;
+    color: var(--ink-faint); margin-top: 4px; font-variant-numeric: tabular-nums;
+  }
+
+  .chip {
+    display: inline-flex; align-items: center; padding: 2px 8px;
+    border-radius: 3px; font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid;
+  }
+  .chip.cat { color: var(--cat-color); border-color: var(--cat-color); background: var(--cat-bg); }
+  .chip.sev-Extreme   { background: var(--hz-warning-bg);  border-color: var(--hz-warning);  color: var(--hz-warning); }
+  .chip.sev-Severe    { background: var(--hz-watch-bg);    border-color: var(--hz-watch);    color: var(--hz-watch); }
+  .chip.sev-Moderate  { background: var(--hz-advisory-bg); border-color: var(--hz-advisory); color: var(--hz-advisory); }
+  .chip.sev-Minor     { background: var(--hz-minor-bg);    border-color: var(--hz-minor);    color: var(--hz-minor); }
+  .chip.sev-Unknown   { background: var(--hz-minor-bg);    border-color: var(--border);      color: var(--ink-3); }
+  .chip.mag {
+    font-family: 'Roboto Mono', monospace;
+    background: #f0f3f5; color: var(--ink-2); border-color: var(--border);
+  }
+  .chip.src {
+    background: transparent; color: var(--ink-faint); border-color: var(--border);
+    font-family: 'Roboto Mono', monospace; text-transform: none;
+  }
+
+  .empty { padding: 60px 20px; text-align: center; color: var(--ink-3); font-size: 14px; }
+  .empty-mono { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--ink-faint); }
+
+  .drawer-detail {
+    position: fixed; right: 16px; bottom: 16px;
+    width: 400px; max-width: calc(100vw - 32px);
+    background: var(--card); border: 1px solid var(--border-strong);
+    border-radius: 8px; box-shadow: 0 10px 40px rgba(16,32,48,0.18);
+    z-index: 50; display: none; overflow: hidden;
+  }
+  .drawer-detail.open { display: block; }
+  .drawer-detail .drawer-stripe { height: 4px; background: var(--cat-color, var(--noaa-blue)); }
+  .drawer-detail-head {
+    padding: 12px 16px; border-bottom: 1px solid var(--divider);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--ink-3); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .detail-body { padding: 16px; }
+  .detail-title { font-size: 19px; font-weight: 600; margin: 0 0 10px; line-height: 1.25; color: var(--ink); }
+  .detail-meta { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .detail-desc { font-size: 13px; color: var(--ink-2); line-height: 1.55; margin: 0 0 12px; }
+  .detail-coord {
+    font-family: 'Roboto Mono', monospace; font-size: 12px;
+    color: var(--ink-3); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .detail-coord svg { width: 12px; height: 12px; }
+  .detail-sources { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .drawer-config {
+    position: fixed; inset: 0;
+    background: rgba(16,32,48,0.5); z-index: 100; display: none;
+    justify-content: flex-end; backdrop-filter: blur(2px);
+  }
+  .drawer-config.open { display: flex; }
+  .drawer-config-inner {
+    width: 480px; max-width: 100vw; background: var(--bg);
+    border-left: 1px solid var(--border-strong);
+    display: flex; flex-direction: column; overflow: auto;
+  }
+  .config-head {
+    padding: 16px 20px; background: var(--noaa-navy); color: var(--on-dark);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 1;
+  }
+  .config-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .config-head .btn { background: transparent; color: var(--on-dark); border-color: rgba(255,255,255,0.3); }
+  .config-head .btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); color: var(--on-dark); }
+  .config-body { padding: 20px; }
+  .config-section {
+    font-size: 12px; font-weight: 600; color: var(--noaa-navy);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin: 0 0 10px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--noaa-blue); display: inline-block;
+  }
+  .config-section.spaced { margin-top: 28px; }
+  .notif-card {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; margin-bottom: 16px;
+  }
+  .notif-card-info { display: flex; align-items: center; gap: 12px; }
+  .notif-card-info svg { width: 20px; height: 20px; color: var(--ink-3); }
+  .notif-card-text { font-size: 14px; color: var(--ink); }
+  .notif-card-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .helper-text { font-size: 13px; color: var(--ink-3); margin: 0 0 12px; line-height: 1.5; }
+  .tracker-input { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tracker-input input { flex: 1; min-width: 0; }
+  .tracker-card {
+    padding: 12px 14px; background: var(--card);
+    border: 1px solid var(--border); border-left: 3px solid var(--noaa-cyan);
+    border-radius: 4px; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: start; gap: 8px;
+  }
+  .tracker-card.disabled { opacity: 0.6; border-left-color: var(--ink-faint); }
+  .tracker-card-info { min-width: 0; flex: 1; }
+  .tracker-card-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .tracker-card-meta { font-family: 'Roboto Mono', monospace; font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+  .tracker-card-actions { display: flex; gap: 4px; }
+  .alert-card {
+    padding: 10px 12px; background: var(--card);
+    border: 1px solid var(--border); border-left: 3px solid var(--hz-warning);
+    border-radius: 4px; margin-bottom: 6px;
+  }
+  .alert-card-meta { font-family: 'Roboto Mono', monospace; font-size: 11px; color: var(--hz-warning); font-weight: 500; }
+  .alert-card-title { font-size: 13px; margin-top: 2px; color: var(--ink); }
+  .empty-config {
+    font-size: 13px; color: var(--ink-3); text-align: center; padding: 18px;
+    background: var(--card); border: 1px dashed var(--border-strong); border-radius: 6px;
+  }
+
+  footer { background: var(--noaa-navy); color: var(--on-dark-dim); padding: 24px; }
+  .footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 32px;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .footer-brand { font-size: 13px; line-height: 1.6; }
+  .footer-brand strong { color: var(--on-dark); display: block; margin-bottom: 6px; font-size: 14px; }
+  .footer-col h4 {
+    font-size: 12px; color: var(--on-dark); text-transform: uppercase;
+    letter-spacing: 0.08em; margin: 0 0 10px; font-weight: 600;
+  }
+  .footer-col ul { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+  .footer-col li { margin-bottom: 6px; }
+  .footer-col a { color: var(--on-dark-dim); }
+  .footer-col a:hover { color: var(--on-dark); }
+  .footer-bar {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 20px; padding-top: 16px; text-align: center;
+    font-size: 11px; color: var(--on-dark-dim);
+    font-family: 'Roboto Mono', monospace; letter-spacing: 0.05em;
+  }
+
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+    .cat-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 700px) {
+    .util-bar { padding: 6px 16px; font-size: 11px; }
+    .brand-row { padding: 16px; }
+    .brand-text h1 { font-size: 22px; }
+    .cat-strip, .controls, main, footer { padding-left: 16px; padding-right: 16px; }
+    .cat-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+    input[type="text"] { min-width: 0; flex: 1; }
+    .ctrl-group { flex: 1; }
+    .seg { margin-left: 0; }
+    .drawer-detail { left: 8px; right: 8px; bottom: 8px; width: auto; }
+    .drawer-config-inner { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="util-bar">
+  <span class="gov-flag">A non-affiliated demonstration site using public data feeds</span>
+  <span class="crumb"><span class="mono">Data sources:</span>
+    <a href="https://eonet.gsfc.nasa.gov" target="_blank" rel="noopener">NASA EONET</a> ·
+    <a href="https://earthquake.usgs.gov" target="_blank" rel="noopener">USGS</a> ·
+    <a href="https://www.weather.gov" target="_blank" rel="noopener">NWS</a>
+  </span>
+</div>
+
+<header class="brand">
+  <div class="brand-row">
+    <div class="brand-mark">
+      <svg class="brand-shield" viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4 4 L44 4 L44 32 C44 44 35 52 24 56 C13 52 4 44 4 32 Z" fill="#003d6b" stroke="#002b5c" stroke-width="1.5"/>
+        <path d="M4 4 L44 4 L44 14 L4 14 Z" fill="#1c5586"/>
+        <ellipse cx="20" cy="28" rx="11" ry="6" fill="#ffffff" opacity="0.95"/>
+        <ellipse cx="28" cy="26" rx="9" ry="5" fill="#ffffff" opacity="0.95"/>
+        <path d="M22 32 L18 42 L22 42 L19 50 L28 39 L24 39 L27 32 Z" fill="#f9a825" stroke="#c17900" stroke-width="0.8" stroke-linejoin="round"/>
+        <path d="M6 38 Q12 35 18 38 T30 38 T42 38" stroke="#ffffff" stroke-width="1.2" fill="none" opacity="0.7"/>
+      </svg>
+      <div class="brand-text">
+        <h1>Aegis Watch</h1>
+        <p class="subtitle">U.S. Natural Hazards &amp; Active Events Monitor</p>
+      </div>
+    </div>
+    <div class="brand-actions">
+      <span class="live-badge"><span class="pulse-dot"></span> Live</span>
+      <span class="mono" id="last-update" style="font-size:12px; color:var(--ink-3);">—</span>
+      <button class="btn primary" id="sync-btn">
+        <svg class="btn-icon" id="sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+        <span id="sync-text">Sync</span>
+      </button>
+      <button class="btn" id="config-btn">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Trackers
+      </button>
+    </div>
+  </div>
+  <div class="accent-stripe"></div>
+</header>
+
+<section class="cat-strip">
+  <div class="cat-strip-label">Active hazard categories — tap to filter</div>
+  <div class="cat-grid" id="cat-grid"></div>
+</section>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <div class="ticker-track" id="ticker-track">Initializing data feed…</div>
+  </div>
+</div>
+
+<section class="controls">
+  <div class="ctrl-group">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--ink-3); flex-shrink: 0;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="search" placeholder="Search title or description…" />
+  </div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Min severity</span>
+    <select id="sev-select">
+      <option value="0">Any</option>
+      <option value="1">Minor</option>
+      <option value="2">Moderate</option>
+      <option value="3">Severe</option>
+      <option value="4">Extreme</option>
+    </select>
+  </div>
+  <div class="seg" id="view-toggle">
+    <button class="btn active" data-view="split">Split</button>
+    <button class="btn" data-view="list">List</button>
+    <button class="btn" data-view="map">Map</button>
+  </div>
+</section>
+
+<main id="main" class="view-split">
+  <div class="panel" id="map-panel">
+    <div class="panel-head">
+      <span class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Geographic distribution
+      </span>
+      <span class="panel-meta" id="map-count">— signals</span>
+    </div>
+    <div class="map-wrap">
+      <svg id="map" viewBox="0 0 1000 600" aria-label="U.S. map showing active natural hazards"></svg>
+      <div class="map-loading" id="map-loading"><div class="spinner"></div><div>Loading U.S. geography…</div></div>
+      <div class="map-legend">
+        <div class="map-legend-title">Severity</div>
+        <div class="map-legend-row"><span class="legend-dot" style="width:14px; height:14px; background:var(--hz-warning);"></span> Extreme / Warning</div>
+        <div class="map-legend-row"><span class="legend-dot" style="width:11px; height:11px; background:var(--hz-watch);"></span> Severe / Watch</div>
+        <div class="map-legend-row"><span class="legend-dot" style="width:9px; height:9px; background:var(--hz-advisory);"></span> Moderate / Advisory</div>
+        <div class="map-legend-row"><span class="legend-dot" style="width:7px; height:7px; background:var(--hz-minor);"></span> Minor</div>
+      </div>
+      <div class="map-attribution">Albers USA · us-atlas TopoJSON</div>
+    </div>
+  </div>
+
+  <div class="panel list-wrap" id="list-panel">
+    <div class="panel-head">
+      <span class="panel-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Event feed
+      </span>
+      <span class="panel-meta"><span id="list-count">0</span> events</span>
+    </div>
+    <div class="list-scroll" id="list-scroll">
+      <div class="empty"><div class="empty-mono">Loading active events…</div></div>
+    </div>
+  </div>
+</main>
+
+<div class="drawer-detail" id="detail-drawer">
+  <div class="drawer-stripe"></div>
+  <div class="drawer-detail-head">
+    <span id="detail-cat">—</span>
+    <button class="btn" id="detail-close" style="padding: 4px 8px;">✕ Close</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<div class="drawer-config" id="config-drawer">
+  <div class="drawer-config-inner">
+    <div class="config-head">
+      <h2>Trackers &amp; alerts</h2>
+      <button class="btn" id="config-close">✕ Close</button>
+    </div>
+    <div class="config-body">
+      <h3 class="config-section">Browser notifications</h3>
+      <div class="notif-card">
+        <div class="notif-card-info">
+          <svg id="notif-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <div>
+            <div class="notif-card-text">Push notifications</div>
+            <div class="notif-card-meta">Status: <span id="notif-status">denied</span></div>
+          </div>
+        </div>
+        <button class="btn primary" id="notif-enable">Enable</button>
+      </div>
+
+      <h3 class="config-section">Trackers (<span id="tracker-count">0</span>)</h3>
+      <p class="helper-text">A tracker saves your current category, severity, and search filters as a named watch. Newly matching events trigger a desktop notification and are logged below.</p>
+      <div class="tracker-input">
+        <input type="text" id="tracker-name" placeholder="e.g., California wildfires" />
+        <button class="btn primary" id="tracker-add">+ Add tracker</button>
+      </div>
+      <div id="trackers-list"></div>
+
+      <h3 class="config-section spaced">Recent alerts (<span id="notif-count">0</span>)</h3>
+      <div id="notifs-list"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <strong>Aegis Watch</strong>
+      A non-commercial demonstration of public natural-hazard data feeds. Not affiliated with NOAA, NASA, USGS, or the U.S. National Weather Service. For authoritative warnings, always consult <a href="https://www.weather.gov" style="color: var(--noaa-cyan);">weather.gov</a>.
+    </div>
+    <div class="footer-col">
+      <h4>Data sources</h4>
+      <ul>
+        <li><a href="https://eonet.gsfc.nasa.gov" target="_blank" rel="noopener">NASA EONET v3</a></li>
+        <li><a href="https://earthquake.usgs.gov/earthquakes/feed/" target="_blank" rel="noopener">USGS Earthquake Feed</a></li>
+        <li><a href="https://api.weather.gov" target="_blank" rel="noopener">NWS Public API</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>System</h4>
+      <ul>
+        <li class="mono" style="font-size: 12px;">Auto-sync: 5 minutes</li>
+        <li class="mono" style="font-size: 12px;">U.S. scope only</li>
+        <li class="mono" style="font-size: 12px;">No tracking, no cookies</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bar">PUBLIC DATA · NO AUTH REQUIRED · BUILT WITH D3 + US-ATLAS</div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+
+<script>
+// ============================================================================
+// AEGIS WATCH — Standalone HTML, NWS aesthetic
+// Real US geography via d3-geo + us-atlas TopoJSON.
+// Live data from NASA EONET, USGS, and the NWS — all CORS-friendly, no keys.
+// ============================================================================
+
+const ICONS = {
+  flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  wind: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>',
+  mountain: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>',
+  snow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/></svg>',
+  waves: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  bellOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  mapPin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+};
+
+const CATEGORIES = {
+  wildfires:     { label: "Wildfires",      color: "#d84315", bg: "#fbe9e1", icon: "flame" },
+  severeStorms:  { label: "Severe Storms",  color: "#c62828", bg: "#fce4e4", icon: "wind" },
+  volcanoes:     { label: "Volcanoes",      color: "#8d4925", bg: "#f3e7df", icon: "mountain" },
+  seaLakeIce:    { label: "Sea & Lake Ice", color: "#4a90b8", bg: "#e3eef5", icon: "snow" },
+  floods:        { label: "Floods",         color: "#2e7d32", bg: "#e3efe3", icon: "waves" },
+  drought:       { label: "Drought",        color: "#8e6c3a", bg: "#f1ebdf", icon: "layers" },
+  earthquakes:   { label: "Earthquakes",    color: "#6a4f9e", bg: "#ebe6f4", icon: "activity" },
+  weatherAlerts: { label: "NWS Alerts",     color: "#003d6b", bg: "#dde7ef", icon: "alert" },
+};
+
+const SEV_RANK = { Extreme: 4, Severe: 3, Moderate: 2, Minor: 1, Unknown: 0 };
+const SEV_FILL = {
+  Extreme: "#c8102e", Severe: "#d97706", Moderate: "#a16207",
+  Minor: "#5b6770", Unknown: "#9aa5b1"
+};
+
+async function fetchEONET() {
+  try {
+    const r = await fetch("https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=200");
+    const data = await r.json();
+    const out = [];
+    for (const e of data.events || []) {
+      const cat = e.categories?.[0]?.id;
+      if (!CATEGORIES[cat]) continue;
+      const lastGeo = e.geometry?.[e.geometry.length - 1];
+      if (!lastGeo) continue;
+      let lng, lat;
+      if (lastGeo.type === "Point") {
+        [lng, lat] = lastGeo.coordinates;
+      } else if (lastGeo.type === "Polygon") {
+        const ring = lastGeo.coordinates[0];
+        lng = ring.reduce((a, c) => a + c[0], 0) / ring.length;
+        lat = ring.reduce((a, c) => a + c[1], 0) / ring.length;
+      } else continue;
+      if (!(lat >= 17 && lat <= 72) || !((lng >= -180 && lng <= -64) || (lng >= 172 && lng <= 180))) continue;
+      out.push({
+        id: e.id, title: e.title, description: e.description || "",
+        category: cat, lat, lng, date: lastGeo.date,
+        sources: e.sources || [], severity: "Unknown",
+        magnitude: lastGeo.magnitudeValue, magUnit: lastGeo.magnitudeUnit,
+        source: "NASA EONET",
+      });
+    }
+    return out;
+  } catch (e) { console.warn("EONET fetch failed:", e); return []; }
+}
+
+async function fetchEarthquakes() {
+  try {
+    const r = await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson");
+    const data = await r.json();
+    return (data.features || [])
+      .filter(f => {
+        const [lng, lat] = f.geometry.coordinates;
+        return lat >= 17 && lat <= 72 && ((lng >= -180 && lng <= -64) || (lng >= 172 && lng <= 180));
+      })
+      .map(f => {
+        const [lng, lat, depth] = f.geometry.coordinates;
+        const mag = f.properties.mag;
+        return {
+          id: f.id, title: f.properties.title,
+          description: `Magnitude ${mag} earthquake at depth ${depth?.toFixed(1)}km. ${f.properties.place || ""}`,
+          category: "earthquakes", lat, lng,
+          date: new Date(f.properties.time).toISOString(),
+          sources: [{ url: f.properties.url, id: "USGS" }],
+          severity: mag >= 6 ? "Extreme" : mag >= 5 ? "Severe" : mag >= 4 ? "Moderate" : "Minor",
+          magnitude: mag, magUnit: "Mw", source: "USGS",
+        };
+      });
+  } catch (e) { console.warn("USGS fetch failed:", e); return []; }
+}
+
+async function fetchNWSAlerts() {
+  try {
+    const r = await fetch("https://api.weather.gov/alerts/active?status=actual", {
+      headers: { Accept: "application/geo+json" }
+    });
+    const data = await r.json();
+    return (data.features || []).map(f => {
+      const p = f.properties;
+      let lat = null, lng = null;
+      if (f.geometry?.type === "Polygon") {
+        const ring = f.geometry.coordinates[0];
+        lng = ring.reduce((a, c) => a + c[0], 0) / ring.length;
+        lat = ring.reduce((a, c) => a + c[1], 0) / ring.length;
+      }
+      return {
+        id: p.id,
+        title: p.event + (p.areaDesc ? ` — ${p.areaDesc.split(";")[0].trim()}` : ""),
+        description: p.headline || (p.description?.slice(0, 300)) || "",
+        category: "weatherAlerts",
+        lat, lng, date: p.sent,
+        sources: [{ url: p["@id"] || "https://www.weather.gov", id: "NWS" }],
+        severity: p.severity || "Unknown",
+        magnitude: null, source: "NWS",
+        urgency: p.urgency, certainty: p.certainty,
+      };
+    });
+  } catch (e) { console.warn("NWS fetch failed:", e); return []; }
+}
+
+let projection = null;
+let pathGenerator = null;
+let usGeoLoaded = false;
+
+async function loadUSGeography() {
+  try {
+    const us = await fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(r => r.json());
+    const states = topojson.feature(us, us.objects.states);
+    const nation = topojson.feature(us, us.objects.nation);
+    const stateBorders = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
+
+    const svg = document.getElementById("map");
+    projection = d3.geoAlbersUsa().scale(1200).translate([500, 300]);
+    projection.fitSize([1000, 600], nation);
+    pathGenerator = d3.geoPath(projection);
+
+    let html = '<g id="map-states">';
+    for (const s of states.features) {
+      const d = pathGenerator(s);
+      if (d) html += `<path class="state" d="${d}" data-state="${s.properties.name}"></path>`;
+    }
+    html += '</g>';
+    html += `<path class="state-border" d="${pathGenerator(stateBorders)}"></path>`;
+    html += `<path class="nation" d="${pathGenerator(nation)}"></path>`;
+    html += '<g id="map-markers"></g>';
+    svg.innerHTML = html;
+
+    document.getElementById("map-loading").style.display = "none";
+    usGeoLoaded = true;
+    renderMarkers();
+  } catch (e) {
+    console.error("US geography load failed:", e);
+    document.getElementById("map-loading").innerHTML = `<div style="color:var(--hz-warning); font-weight:500;">Could not load U.S. geography</div><div style="font-size:12px;">${e.message}</div>`;
+  }
+}
+
+function renderMarkers() {
+  if (!usGeoLoaded || !projection) return;
+  const f = getFiltered();
+  document.getElementById("map-count").textContent = `${f.length} signal${f.length === 1 ? '' : 's'}`;
+  const markers = document.getElementById("map-markers");
+  if (!markers) return;
+  let html = '';
+  for (const e of f) {
+    const p = projection([e.lng, e.lat]);
+    if (!p) continue;
+    const sevFill = SEV_FILL[e.severity] || CATEGORIES[e.category].color;
+    const isSel = e.id === state.selectedId;
+    const r = isSel ? 9 : (e.severity === "Extreme" ? 7 : e.severity === "Severe" ? 5.5 : 4);
+    html += `<g class="marker" data-event-id="${escapeHTML(e.id)}">
+      <circle class="halo" cx="${p[0]}" cy="${p[1]}" r="${r + 5}" fill="${sevFill}" opacity="0.22"/>
+      <circle cx="${p[0]}" cy="${p[1]}" r="${r}" fill="${sevFill}" stroke="#ffffff" stroke-width="1.2"/>`;
+    if (isSel) {
+      html += `<circle cx="${p[0]}" cy="${p[1]}" r="${r + 10}" fill="none" stroke="${sevFill}" stroke-width="1.5" opacity="0.6">
+        <animate attributeName="r" from="${r+6}" to="${r+18}" dur="1.4s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" from="0.6" to="0" dur="1.4s" repeatCount="indefinite"/></circle>`;
+    }
+    html += `</g>`;
+  }
+  markers.innerHTML = html;
+  markers.querySelectorAll("[data-event-id]").forEach(g => {
+    g.onclick = () => { state.selectedId = g.dataset.eventId; renderAll(); };
+  });
+}
+
+const state = {
+  events: [], loading: true, lastUpdate: null, selectedId: null,
+  activeCats: new Set(Object.keys(CATEGORIES)),
+  minSev: 0, search: "", view: "split",
+  trackers: [], notifs: [],
+  notifPerm: typeof Notification !== "undefined" ? Notification.permission : "denied",
+};
+
+function loadPersisted() {
+  try {
+    const t = localStorage.getItem("aw.trackers"); if (t) state.trackers = JSON.parse(t);
+    const n = localStorage.getItem("aw.notifs"); if (n) state.notifs = JSON.parse(n);
+    const s = localStorage.getItem("aw.settings");
+    if (s) {
+      const obj = JSON.parse(s);
+      if (obj.activeCats) state.activeCats = new Set(obj.activeCats);
+      if (obj.minSev != null) state.minSev = obj.minSev;
+      if (obj.view) state.view = obj.view;
+    }
+  } catch (e) { console.warn("localStorage load failed", e); }
+}
+function saveTrackers() { try { localStorage.setItem("aw.trackers", JSON.stringify(state.trackers)); } catch {} }
+function saveNotifs() { try { localStorage.setItem("aw.notifs", JSON.stringify(state.notifs.slice(0, 50))); } catch {} }
+function saveSettings() {
+  try {
+    localStorage.setItem("aw.settings", JSON.stringify({
+      activeCats: [...state.activeCats], minSev: state.minSev, view: state.view
+    }));
+  } catch {}
+}
+
+const $ = (id) => document.getElementById(id);
+function fmtTime(iso) {
+  const d = new Date(iso);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff/60) + "m ago";
+  if (diff < 86400) return Math.floor(diff/3600) + "h ago";
+  return Math.floor(diff/86400) + "d ago";
+}
+function getFiltered() {
+  return state.events.filter(e => {
+    if (!state.activeCats.has(e.category)) return false;
+    if ((SEV_RANK[e.severity] || 0) < state.minSev) return false;
+    if (state.search) {
+      const q = state.search.toLowerCase();
+      if (!(e.title + " " + e.description).toLowerCase().includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+function escapeHTML(s) {
+  return String(s || "").replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+async function loadAll() {
+  state.loading = true;
+  $("sync-text").textContent = "Syncing";
+  $("sync-icon").classList.add("spinning");
+  $("sync-btn").disabled = true;
+  try {
+    const results = await Promise.allSettled([fetchEONET(), fetchEarthquakes(), fetchNWSAlerts()]);
+    state.events = results.flatMap(r => r.status === "fulfilled" ? r.value : []);
+    state.lastUpdate = new Date();
+    checkTrackers(state.events);
+  } catch (e) { console.error(e); }
+  finally {
+    state.loading = false;
+    $("sync-text").textContent = "Sync";
+    $("sync-icon").classList.remove("spinning");
+    $("sync-btn").disabled = false;
+    renderAll();
+  }
+}
+
+function checkTrackers(allEvents) {
+  let triggered = false;
+  for (const t of state.trackers) {
+    if (!t.enabled) continue;
+    const matches = allEvents.filter(e => {
+      if (!t.categories.includes(e.category)) return false;
+      if ((SEV_RANK[e.severity] || 0) < (t.minSev || 0)) return false;
+      if (t.keyword && !((e.title + " " + e.description).toLowerCase().includes(t.keyword.toLowerCase()))) return false;
+      if (t.lastCheck && new Date(e.date) <= new Date(t.lastCheck)) return false;
+      return true;
+    });
+    for (const m of matches.slice(0, 3)) {
+      const id = `${t.id}-${m.id}`;
+      if (state.notifs.find(n => n.id === id)) continue;
+      state.notifs.unshift({ id, tracker: t.name, eventTitle: m.title, time: new Date().toISOString() });
+      if (state.notifPerm === "granted" && typeof Notification !== "undefined") {
+        try { new Notification(`[${t.name}] ${m.title}`, { body: (m.description || "").slice(0, 140) }); } catch {}
+      }
+      triggered = true;
+    }
+    if (matches.length) t.lastCheck = new Date().toISOString();
+  }
+  if (triggered) {
+    state.notifs = state.notifs.slice(0, 50);
+    saveNotifs(); saveTrackers();
+  }
+}
+
+function renderCats() {
+  const counts = {};
+  Object.keys(CATEGORIES).forEach(k => counts[k] = 0);
+  state.events.forEach(e => counts[e.category] = (counts[e.category] || 0) + 1);
+  $("cat-grid").innerHTML = Object.entries(CATEGORIES).map(([k, c]) => {
+    const on = state.activeCats.has(k);
+    return `<button class="cat-tile ${on ? '' : 'off'}" data-cat="${k}" style="--cat-color:${c.color};">
+      <div class="cat-tile-head">
+        <span class="cat-tile-icon">${ICONS[c.icon]}</span>
+        <span class="cat-tile-toggle"></span>
+      </div>
+      <div class="cat-tile-num">${counts[k] || 0}</div>
+      <div class="cat-tile-label">${c.label}</div>
+    </button>`;
+  }).join("");
+  $("cat-grid").querySelectorAll("[data-cat]").forEach(el => {
+    el.onclick = () => {
+      const k = el.dataset.cat;
+      state.activeCats.has(k) ? state.activeCats.delete(k) : state.activeCats.add(k);
+      saveSettings();
+      renderAll();
+    };
+  });
+}
+
+function renderTicker() {
+  const f = getFiltered();
+  if (f.length === 0) {
+    $("ticker-track").innerHTML = `<span class="lbl">●</span> No active events matching current filters`;
+    return;
+  }
+  $("ticker-track").innerHTML = f.slice(0, 30).map(e =>
+    `<span class="lbl">${(CATEGORIES[e.category]?.label || e.category).toUpperCase()}</span> ${escapeHTML(e.title)} <span style="color:rgba(255,255,255,0.5);">· ${fmtTime(e.date)}</span>`
+  ).join('<span class="sep">●</span>');
+}
+
+function renderList() {
+  const f = getFiltered();
+  $("list-count").textContent = f.length;
+  if (state.loading && f.length === 0) {
+    $("list-scroll").innerHTML = `<div class="empty"><div class="spinner" style="margin: 0 auto 12px;"></div><div class="empty-mono">Loading active events…</div></div>`;
+    return;
+  }
+  if (f.length === 0) {
+    $("list-scroll").innerHTML = `<div class="empty"><div style="font-size:14px; margin-bottom:4px;">No events match your filters</div><div class="empty-mono">Try adjusting categories or severity above</div></div>`;
+    return;
+  }
+  $("list-scroll").innerHTML = f.map(e => {
+    const c = CATEGORIES[e.category];
+    const sel = e.id === state.selectedId;
+    return `<div class="event-row ${sel ? 'selected' : ''}" data-event-id="${escapeHTML(e.id)}" style="--cat-color:${c.color}; --cat-bg:${c.bg};">
+      <div class="event-icon">${ICONS[c.icon]}</div>
+      <div style="min-width:0;">
+        <div class="event-title">${escapeHTML(e.title)}</div>
+        ${e.description ? `<div class="event-desc">${escapeHTML(e.description)}</div>` : ''}
+        <div class="event-meta">
+          <span class="chip cat">${c.label}</span>
+          <span class="chip sev-${e.severity}">${e.severity}</span>
+          ${e.magnitude != null ? `<span class="chip mag">M${e.magnitude}${e.magUnit ? ' ' + e.magUnit : ''}</span>` : ''}
+          <span class="chip src">${e.source}</span>
+        </div>
+      </div>
+      <div style="text-align:right; white-space:nowrap;">
+        <div class="event-time">${fmtTime(e.date)}</div>
+        ${e.lat != null ? `<div class="event-coord">${e.lat.toFixed(2)}, ${e.lng.toFixed(2)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join("");
+  $("list-scroll").querySelectorAll("[data-event-id]").forEach(r => {
+    r.onclick = () => { state.selectedId = r.dataset.eventId; renderAll(); };
+  });
+}
+
+function renderDetail() {
+  const e = state.events.find(x => x.id === state.selectedId);
+  if (!e) { $("detail-drawer").classList.remove("open"); return; }
+  const c = CATEGORIES[e.category];
+  $("detail-drawer").classList.add("open");
+  $("detail-drawer").style.setProperty("--cat-color", c.color);
+  $("detail-cat").textContent = `${c.label} · ${fmtTime(e.date)} · ${e.source}`;
+  $("detail-body").innerHTML = `
+    <h3 class="detail-title">${escapeHTML(e.title)}</h3>
+    <div class="detail-meta">
+      <span class="chip sev-${e.severity}">${e.severity}</span>
+      ${e.magnitude != null ? `<span class="chip mag">M${e.magnitude}${e.magUnit ? ' ' + e.magUnit : ''}</span>` : ''}
+      ${e.urgency ? `<span class="chip mag">${e.urgency}</span>` : ''}
+    </div>
+    ${e.description ? `<p class="detail-desc">${escapeHTML(e.description.slice(0, 400))}${e.description.length > 400 ? '…' : ''}</p>` : ''}
+    ${e.lat != null ? `<div class="detail-coord">${ICONS.mapPin} ${e.lat.toFixed(4)}°, ${e.lng.toFixed(4)}°</div>` : ''}
+    <div class="detail-sources">
+      ${e.sources.slice(0, 3).map(s =>
+        `<a href="${escapeHTML(s.url)}" target="_blank" rel="noopener noreferrer" class="btn">${escapeHTML(s.id || 'Source')} ${ICONS.external}</a>`
+      ).join('')}
+    </div>`;
+}
+
+function renderTrackersList() {
+  $("tracker-count").textContent = state.trackers.length;
+  if (state.trackers.length === 0) {
+    $("trackers-list").innerHTML = `<div class="empty-config">No trackers yet. Set your filters above, then add one here.</div>`;
+  } else {
+    $("trackers-list").innerHTML = state.trackers.map(t => `
+      <div class="tracker-card ${t.enabled ? '' : 'disabled'}">
+        <div class="tracker-card-info">
+          <div class="tracker-card-name">${escapeHTML(t.name)}</div>
+          <div class="tracker-card-meta">${t.categories.length} categories · severity ≥ ${t.minSev}${t.keyword ? ' · "' + escapeHTML(t.keyword) + '"' : ''}</div>
+        </div>
+        <div class="tracker-card-actions">
+          <button class="btn" data-toggle="${escapeHTML(t.id)}" title="${t.enabled ? 'Disable' : 'Enable'}" style="padding: 5px 8px;">
+            <span style="width:14px; height:14px; display:inline-block; color:${t.enabled ? '#2e7d32' : 'var(--ink-faint)'};">${t.enabled ? ICONS.bell : ICONS.bellOff}</span>
+          </button>
+          <button class="btn danger" data-del="${escapeHTML(t.id)}" style="padding: 5px 8px;">${ICONS.trash}</button>
+        </div>
+      </div>`).join("");
+    $("trackers-list").querySelectorAll("[data-del]").forEach(b => {
+      b.onclick = () => { state.trackers = state.trackers.filter(x => x.id !== b.dataset.del); saveTrackers(); renderTrackersList(); };
+    });
+    $("trackers-list").querySelectorAll("[data-toggle]").forEach(b => {
+      b.onclick = () => {
+        state.trackers = state.trackers.map(x => x.id === b.dataset.toggle ? { ...x, enabled: !x.enabled } : x);
+        saveTrackers(); renderTrackersList();
+      };
+    });
+  }
+  $("notif-count").textContent = state.notifs.length;
+  if (state.notifs.length === 0) {
+    $("notifs-list").innerHTML = `<div class="empty-config">No alerts triggered yet</div>`;
+  } else {
+    $("notifs-list").innerHTML = state.notifs.map(n => `
+      <div class="alert-card">
+        <div class="alert-card-meta">[${escapeHTML(n.tracker.toUpperCase())}] ${fmtTime(n.time)}</div>
+        <div class="alert-card-title">${escapeHTML(n.eventTitle)}</div>
+      </div>`).join("");
+  }
+}
+
+function renderHeader() {
+  $("last-update").textContent = state.lastUpdate ? `Updated ${fmtTime(state.lastUpdate.toISOString())}` : "—";
+  $("notif-status").textContent = state.notifPerm;
+  $("notif-icon").style.color = state.notifPerm === "granted" ? "#2e7d32" : "var(--ink-3)";
+  $("notif-enable").style.display = state.notifPerm === "granted" ? "none" : "";
+}
+
+function renderView() {
+  $("main").className = `view-${state.view}`;
+  $("map-panel").style.display = state.view === "list" ? "none" : "";
+  $("list-panel").style.display = state.view === "map" ? "none" : "";
+  document.querySelectorAll("#view-toggle .btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === state.view);
+  });
+}
+
+function renderAll() {
+  renderCats(); renderTicker(); renderMarkers();
+  renderList(); renderDetail(); renderTrackersList();
+  renderHeader(); renderView();
+}
+
+function init() {
+  loadPersisted();
+  $("sev-select").value = state.minSev;
+
+  $("search").addEventListener("input", e => {
+    state.search = e.target.value;
+    renderTicker(); renderMarkers(); renderList();
+  });
+  $("sev-select").addEventListener("change", e => {
+    state.minSev = +e.target.value; saveSettings();
+    renderTicker(); renderMarkers(); renderList();
+  });
+  document.querySelectorAll("#view-toggle .btn").forEach(b => {
+    b.onclick = () => { state.view = b.dataset.view; saveSettings(); renderView(); };
+  });
+  $("sync-btn").onclick = () => loadAll();
+  $("config-btn").onclick = () => $("config-drawer").classList.add("open");
+  $("config-close").onclick = () => $("config-drawer").classList.remove("open");
+  $("config-drawer").onclick = (e) => { if (e.target === $("config-drawer")) $("config-drawer").classList.remove("open"); };
+  $("detail-close").onclick = () => { state.selectedId = null; renderAll(); };
+
+  $("notif-enable").onclick = async () => {
+    if (typeof Notification === "undefined") return;
+    const p = await Notification.requestPermission();
+    state.notifPerm = p;
+    renderHeader();
+  };
+
+  $("tracker-add").onclick = () => {
+    const name = $("tracker-name").value.trim();
+    if (!name) return;
+    state.trackers.push({
+      id: "t_" + Date.now(), name,
+      categories: [...state.activeCats],
+      minSev: state.minSev, keyword: state.search || "",
+      enabled: true, lastCheck: new Date().toISOString(),
+      created: new Date().toISOString(),
+    });
+    saveTrackers();
+    $("tracker-name").value = "";
+    renderTrackersList();
+  };
+  $("tracker-name").addEventListener("keydown", e => { if (e.key === "Enter") $("tracker-add").click(); });
+
+  renderAll();
+  loadUSGeography();
+  loadAll();
+
+  setInterval(loadAll, 5 * 60 * 1000);
+  setInterval(() => { renderHeader(); renderList(); renderTicker(); }, 30 * 1000);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>

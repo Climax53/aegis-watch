@@ -1,0 +1,19 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Secrets / env (this app has none, but never commit them)
+.env
+.env.*
+
+# Dependencies / build output (none today — just in case)
+node_modules/
+dist/
+*.log

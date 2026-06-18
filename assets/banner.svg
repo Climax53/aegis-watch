@@ -6,16 +6,16 @@
   <rect x="320" y="312" width="320" height="8" fill="#1c5586"/>
   <rect x="640" y="312" width="320" height="8" fill="#2c87b8"/>
   <rect x="960" y="312" width="320" height="8" fill="#f9a825"/>
-  <text x="80" y="104" font-family="'Courier New', ui-monospace, monospace" font-size="22" letter-spacing="6" fill="#7FB3D5" font-weight="700">U.S. NATURAL HAZARDS &#183; LIVE</text>
-  <text x="76" y="192" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="86" font-weight="700" fill="#ffffff" letter-spacing="-1">Aegis Watch</text>
-  <text x="80" y="240" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="27" fill="#cfe4f3" font-weight="400">Wildfires, storms, and quakes &#8212; on one live map.</text>
+  <text x="80" y="70" font-family="'Courier New', ui-monospace, monospace" font-size="22" letter-spacing="6" fill="#7FB3D5" font-weight="700">U.S. NATURAL HAZARDS &#183; LIVE</text>
+  <text x="76" y="158" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="86" font-weight="700" fill="#ffffff" letter-spacing="-1">Aegis Watch</text>
+  <text x="80" y="206" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="27" fill="#cfe4f3" font-weight="400">Wildfires, storms, and quakes &#8212; on one live map.</text>
   <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="17" font-weight="600">
-    <rect x="80" y="266" width="222" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
-    <text x="191" y="291" fill="#9FC7E0" text-anchor="middle">NASA &#183; USGS &#183; NWS</text>
-    <rect x="312" y="266" width="118" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
-    <text x="371" y="291" fill="#9FC7E0" text-anchor="middle">Live data</text>
-    <rect x="440" y="266" width="116" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
-    <text x="498" y="291" fill="#9FC7E0" text-anchor="middle">No build</text>
+    <rect x="80" y="232" width="222" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
+    <text x="191" y="257" fill="#9FC7E0" text-anchor="middle">NASA &#183; USGS &#183; NWS</text>
+    <rect x="312" y="232" width="118" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
+    <text x="371" y="257" fill="#9FC7E0" text-anchor="middle">Live data</text>
+    <rect x="440" y="232" width="116" height="38" rx="19" fill="none" stroke="#2c87b8" stroke-width="1.5"/>
+    <text x="498" y="257" fill="#9FC7E0" text-anchor="middle">No build</text>
   </g>
   <g transform="translate(1010,150)">
     <circle r="92" fill="none" stroke="#2c87b8" stroke-width="2" opacity="0.25"/>
